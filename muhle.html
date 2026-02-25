@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mühle - Nine Men's Morris</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Mühle - Nine Men's Morris</h1>
+        <div class="info">Click on an empty position to place a piece, then click on a piece and a destination to move it</div>
+
+        <div class="game-wrapper">
+            <div class="board-container">
+                <canvas id="board"></canvas>
+            </div>
+
+            <div class="sidebar">
+                <div class="status">
+                    <div class="status-title">Game Status</div>
+                    <div class="status-content" id="gameStatus">
+                        Game Starting - White's Turn
+                    </div>
+                </div>
+
+                <div class="piece-count">
+                    <div class="piece-info">
+                        <div class="piece-count-label">White Pieces</div>
+                        <div class="piece-count-value white" id="whiteCount">9</div>
+                    </div>
+                    <div class="piece-info">
+                        <div class="piece-count-label">Black Pieces</div>
+                        <div class="piece-count-value black" id="blackCount">9</div>
+                    </div>
+                </div>
+
+                <div class="buttons">
+                    <button class="btn-reset" onclick="game.resetGame()">New Game</button>
+                    <button class="btn-undo" id="undoBtn" onclick="game.undo()" disabled>Undo Move</button>
+                </div>
+
+                <div class="rules">
+                    <div class="rules-title">How to Play:</div>
+                    <ul>
+                        <li><strong>Phase 1:</strong> Players alternate placing pieces</li>
+                        <li><strong>Phase 2:</strong> Move pieces to adjacent positions</li>
+                        <li><strong>Mill:</strong> Three in a row = remove opponent's piece</li>
+                        <li><strong>Win:</strong> Opponent has fewer than 3 pieces OR can't move</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="winner-overlay" id="winnerOverlay">
+        <div class="winner-modal">
+            <h2 id="winnerMessage">White Wins!</h2>
+            <button onclick="game.resetGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

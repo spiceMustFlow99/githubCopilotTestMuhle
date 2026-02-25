@@ -1,0 +1,218 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    padding: 30px;
+    max-width: 900px;
+    width: 100%;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.info {
+    text-align: center;
+    color: #666;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.game-wrapper {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.board-container {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    background: #e8d4b8;
+    border: 3px solid #8b7355;
+    border-radius: 5px;
+}
+
+canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border-radius: 2px;
+}
+
+.sidebar {
+    min-width: 250px;
+}
+
+.status {
+    background: #f5f5f5;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    border-left: 4px solid #667eea;
+}
+
+.status-title {
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.status-content {
+    color: #666;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.piece-count {
+    display: flex;
+    justify-content: space-around;
+    margin: 15px 0;
+    padding: 10px;
+    background: #fff;
+    border-radius: 5px;
+}
+
+.piece-info {
+    text-align: center;
+}
+
+.piece-count-label {
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 5px;
+}
+
+.piece-count-value {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.piece-count-value.white {
+    color: #444;
+}
+
+.piece-count-value.black {
+    color: #333;
+}
+
+.buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    flex-direction: column;
+}
+
+button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-reset {
+    background: #667eea;
+    color: white;
+}
+
+.btn-reset:hover {
+    background: #5568d3;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-undo {
+    background: #f0f0f0;
+    color: #333;
+    border: 1px solid #ddd;
+}
+
+.btn-undo:hover {
+    background: #e0e0e0;
+}
+
+.btn-undo:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.rules {
+    margin-top: 20px;
+    font-size: 12px;
+    color: #666;
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.rules-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.rules ul {
+    margin-left: 15px;
+    line-height: 1.4;
+}
+
+.winner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    display: none;
+}
+
+.winner-modal {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.winner-modal h2 {
+    color: #667eea;
+    margin-bottom: 20px;
+    font-size: 32px;
+}
+
+.winner-modal button {
+    margin-top: 20px;
+    background: #667eea;
+    color: white;
+    padding: 12px 30px;
+}
+
+.winner-modal button:hover {
+    background: #5568d3;
+}
