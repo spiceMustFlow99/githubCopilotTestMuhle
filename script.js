@@ -4,27 +4,54 @@ class MuhleGame {
         this.ctx = this.canvas.getContext('2d');
         
         // Set canvas size to actual pixel dimensions
-        const rect = this.canvas.parentElement.getBoundingClientRect();
         this.canvas.width = 300;
         this.canvas.height = 300;
         
-        // 22 positions: 0-7 outer, 8-13 middle, 14-21 inner
+        // 24 positions total
         this.positions = [
             // Outer square (0-7)
             [30, 30], [150, 30], [270, 30],        // 0, 1, 2
-            [30, 150], [270, 150],                 // 3, 4
+            [30, 150], [270, 150],                  // 3, 4
             [30, 270], [150, 270], [270, 270],     // 5, 6, 7
             
             // Middle square (8-15)
             [75, 75], [150, 75], [225, 75],        // 8, 9, 10
-            [75, 150], [225, 150],                 // 11, 12
+            [75, 150], [225, 150],                  // 11, 12
             [75, 225], [150, 225], [225, 225],     // 13, 14, 15
             
-            // Inner square (15-23)
+            // Inner square (16-23)
             [112, 112], [150, 112], [188, 112],    // 16, 17, 18
             [112, 150], [188, 150],                // 19, 20
             [112, 188], [150, 188], [188, 188]     // 21, 22, 23
         ];
+
+        // Adjacency map - defines which positions are directly adjacent to each other
+        this.adjacencyMap = {
+            0: [1, 3, 8],
+            1: [0, 2, 9],
+            2: [1, 4, 10],
+            3: [0, 5, 11],
+            4: [2, 7, 12],
+            5: [3, 6, 13],
+            6: [5, 7, 14],
+            7: [4, 6, 15],
+            8: [0, 9, 11, 16],
+            9: [1, 8, 10, 17],
+            10: [2, 9, 12, 18],
+            11: [3, 8, 13, 19],
+            12: [4, 10, 15, 20],
+            13: [5, 11, 14, 21],
+            14: [6, 13, 15, 22],
+            15: [7, 12, 14, 23],
+            16: [17, 19, 8],
+            17: [16, 18, 9],
+            18: [17, 20, 10],
+            19: [16, 21, 11],
+            20: [18, 23, 12],
+            21: [19, 22, 13],
+            22: [21, 23, 14],
+            23: [20, 22, 15]
+        };
 
         // Corrected lines - each line connects three positions in a row
         this.lines = [
@@ -38,7 +65,7 @@ class MuhleGame {
             [8, 9, 10],     // Top
             [10, 12, 15],   // Right
             [13, 14, 15],   // Bottom
-            [8, 11, 13],     // Left
+            [8, 11, 13],    // Left
             
             // Inner square sides
             [16, 17, 18],   // Top
@@ -54,14 +81,23 @@ class MuhleGame {
             [6, 14, 22],    // Bottom vertical
             [4, 12, 20],    // Right vertical
             [3, 11, 19],    // Left vertical
-            [7, 15, 23]     // Bottom-right horizontal
+            [7, 15, 23]     // Bottom-right diagonal
         ];
 
+        this.initializeBoard();
         this.resetGame();
     }
 
+    initializeBoard() {
+        // Create a fresh board array with all nulls
+        this.board = [];
+        for (let i = 0; i < 24; i++) {
+            this.board[i] = null;
+        }
+    }
+
     resetGame() {
-        this.board = new Array(22).fill(null);
+        this.initializeBoard();
         this.currentPlayer = 'white';
         this.piecesPlaced = { white: 0, black: 0 };
         this.gamePhase = 'placing';
@@ -77,17 +113,26 @@ class MuhleGame {
     }
 
     getAdjacent(pos) {
-        const adjacent = [];
-        for (let line of this.lines) {
-            if (line.includes(pos)) {
-                for (let p of line) {
-                    if (p !== pos && !adjacent.includes(p)) {
-                        adjacent.push(p);
-                    }
-                }
-            }
+        // Return directly adjacent positions from the adjacency map
+        return this.adjacencyMap[pos] || [];
+    }
+
+    canPlayerFly() {
+        // Check if the current player has exactly 3 pieces
+        const playerPieces = this.board.filter(p => p === this.currentPlayer).length;
+        return playerPieces === 3;
+    }
+
+    getValidMoves(pos) {
+        // If player can fly (has 3 pieces), they can move to any empty position
+        if (this.canPlayerFly()) {
+            return this.board
+                .map((piece, index) => piece === null ? index : null)
+                .filter(index => index !== null);
         }
-        return [...new Set(adjacent)];
+        
+        // Otherwise, only adjacent positions
+        return this.getAdjacent(pos);
     }
 
     checkMill(pos) {
@@ -127,7 +172,13 @@ class MuhleGame {
             return;
         }
 
-        this.history.push(JSON.stringify({ board: this.board, piecesPlaced: this.piecesPlaced, selectedPiece: this.selectedPiece }));
+        // Save state before making changes
+        const stateCopy = {
+            board: [...this.board],
+            piecesPlaced: { ...this.piecesPlaced },
+            selectedPiece: this.selectedPiece
+        };
+        this.history.push(JSON.stringify(stateCopy));
         document.getElementById('undoBtn').disabled = false;
 
         this.board[pos] = this.currentPlayer;
@@ -158,23 +209,36 @@ class MuhleGame {
 
         if (this.board[pos] === this.currentPlayer) {
             this.selectedPiece = this.selectedPiece === pos ? null : pos;
-        } else if (this.selectedPiece !== null) {
+            this.render();
+        } else if (this.board[pos] === null && this.selectedPiece !== null) {
+            // Try to move to an empty position
             this.movePiece(pos);
         }
-
-        this.render();
     }
 
     movePiece(pos) {
-        if (this.selectedPiece === null || this.board[pos] !== null) return;
-
-        const adjacent = this.getAdjacent(this.selectedPiece);
-        if (!adjacent.includes(pos)) {
-            alert('Can only move to adjacent positions!');
+        if (this.selectedPiece === null) return;
+        if (this.board[pos] !== null) {
+            alert('Position already occupied!');
             return;
         }
 
-        this.history.push(JSON.stringify({ board: this.board, piecesPlaced: this.piecesPlaced, selectedPiece: this.selectedPiece }));
+        const validMoves = this.getValidMoves(this.selectedPiece);
+        if (!validMoves.includes(pos)) {
+            const moveType = this.canPlayerFly() ? 'fly to any empty position' : 'move to adjacent positions';
+            alert(`Can ${moveType}! Valid moves: ${validMoves.join(', ')}`);
+            this.selectedPiece = null;
+            this.render();
+            return;
+        }
+
+        // Save state before making changes
+        const stateCopy = {
+            board: [...this.board],
+            piecesPlaced: { ...this.piecesPlaced },
+            selectedPiece: this.selectedPiece
+        };
+        this.history.push(JSON.stringify(stateCopy));
         document.getElementById('undoBtn').disabled = false;
 
         this.board[pos] = this.currentPlayer;
@@ -201,18 +265,29 @@ class MuhleGame {
     }
 
     checkWinCondition() {
+        // Only check win conditions during the moving phase, not placement phase
+        if (this.gamePhase !== 'moving') return;
+
         const opponent = this.currentPlayer === 'white' ? 'black' : 'white';
         const opponentPieces = this.board.filter(p => p === opponent).length;
 
+        // Check if opponent has fewer than 3 pieces
         if (opponentPieces < 3) {
-            this.endGame(`${this.currentPlayer === 'white' ? 'Black' : 'White'} Wins!`);
+            this.endGame(`${this.currentPlayer === 'white' ? 'Black' : 'White'} Wins! (Opponent has fewer than 3 pieces)`);
             return;
         }
 
-        if (this.gamePhase === 'moving') {
-            let canMove = false;
+        // Check if opponent can move
+        let canMove = false;
+        
+        // If opponent has 3 pieces, they can always move (can fly to any empty space)
+        if (opponentPieces === 3) {
+            const emptyPositions = this.board.filter(p => p === null).length;
+            canMove = emptyPositions > 0;
+        } else {
+            // Otherwise check if they have adjacent empty positions
             for (let i = 0; i < this.board.length; i++) {
-                if (this.board[i] === this.currentPlayer) {
+                if (this.board[i] === opponent) {
                     const adjacent = this.getAdjacent(i);
                     if (adjacent.some(p => this.board[p] === null)) {
                         canMove = true;
@@ -220,10 +295,10 @@ class MuhleGame {
                     }
                 }
             }
+        }
 
-            if (!canMove) {
-                this.endGame(`${this.currentPlayer === 'white' ? 'Black' : 'White'} Wins!`);
-            }
+        if (!canMove) {
+            this.endGame(`${this.currentPlayer === 'white' ? 'Black' : 'White'} Wins! (Opponent is blocked)`);
         }
     }
 
@@ -237,8 +312,8 @@ class MuhleGame {
         if (this.history.length === 0) return;
 
         const state = JSON.parse(this.history.pop());
-        this.board = state.board;
-        this.piecesPlaced = state.piecesPlaced;
+        this.board = [...state.board];
+        this.piecesPlaced = { ...state.piecesPlaced };
         this.selectedPiece = state.selectedPiece;
         this.gameOver = false;
 
@@ -255,8 +330,19 @@ class MuhleGame {
             ? `Placing Phase (${this.piecesPlaced[this.currentPlayer]}/9 pieces placed)`
             : 'Moving Phase';
         
+        let selectedInfo = '';
+        if (this.gamePhase === 'moving' && this.selectedPiece !== null) {
+            const validMoves = this.getValidMoves(this.selectedPiece);
+            const moveType = this.canPlayerFly() ? '(Flying - can move anywhere!)' : '';
+            selectedInfo = `<br>Selected piece at ${this.selectedPiece}. Can move to: ${validMoves.join(', ')} ${moveType}`;
+        }
+        
         document.getElementById('gameStatus').innerHTML = 
-            `<strong>${this.currentPlayer.toUpperCase()}'s Turn</strong><br>${phase}`;
+            `<strong>${this.currentPlayer.toUpperCase()}'s Turn</strong><br>${phase}${selectedInfo}`;
+        
+        const playerPieces = this.board.filter(p => p === this.currentPlayer).length;
+        const opponentColor = this.currentPlayer === 'white' ? 'black' : 'white';
+        const opponentPieces = this.board.filter(p => p === opponentColor).length;
         
         document.getElementById('whiteCount').textContent = this.board.filter(p => p === 'white').length;
         document.getElementById('blackCount').textContent = this.board.filter(p => p === 'black').length;
