@@ -165,6 +165,48 @@ class MuhleGame {
         return unprotected.length > 0 ? unprotected : protected_;
     }
 
+    handleMillRemoval() {
+        // Returns true if a piece was removed, false if not
+        const opponent = this.getOpponentPieces();
+        if (opponent.length === 0) return false;
+
+        let validRemoval = false;
+        while (!validRemoval) {
+            const removedPos = prompt(`Mill formed! Remove opponent's piece (positions: ${opponent.join(', ')})`);
+            
+            // User cancelled
+            if (removedPos === null) {
+                return false;
+            }
+
+            const posNum = parseInt(removedPos);
+
+            // Validate input
+            if (isNaN(posNum)) {
+                alert('Please enter a valid number');
+                continue;
+            }
+
+            // Check if position is valid
+            if (!opponent.includes(posNum)) {
+                alert(`Invalid position! You can only remove from: ${opponent.join(', ')}`);
+                continue;
+            }
+
+            // Check if it's an opponent's piece
+            const opponentColor = this.currentPlayer === 'white' ? 'black' : 'white';
+            if (this.board[posNum] !== opponentColor) {
+                alert(`That position doesn't contain an opponent's piece!`);
+                continue;
+            }
+
+            // Valid removal
+            this.board[posNum] = null;
+            validRemoval = true;
+            return true;
+        }
+    }
+
     placePiece(pos) {
         if (this.gameOver) return;
         if (this.board[pos] !== null) {
@@ -185,11 +227,16 @@ class MuhleGame {
         this.piecesPlaced[this.currentPlayer]++;
 
         if (this.checkMill(pos)) {
-            const opponent = this.getOpponentPieces();
-            if (opponent.length > 0) {
-                const removedPos = prompt(`Mill formed! Remove opponent's piece (positions: ${opponent.join(', ')})`);
-                if (removedPos !== null && opponent.includes(parseInt(removedPos))) {
-                    this.board[parseInt(removedPos)] = null;
+            if (this.handleMillRemoval()) {
+                // Only check win condition if we're in moving phase
+                if (this.gamePhase === 'moving') {
+                    const opponentColor = this.currentPlayer === 'white' ? 'black' : 'white';
+                    const opponentPiecesAfterRemoval = this.board.filter(p => p === opponentColor).length;
+                    if (opponentPiecesAfterRemoval < 3) {
+                        this.endGame(`${this.currentPlayer.toUpperCase()} Wins! (Opponent has fewer than 3 pieces)`);
+                        this.render();
+                        return;
+                    }
                 }
             }
         }
@@ -246,11 +293,14 @@ class MuhleGame {
         this.selectedPiece = null;
 
         if (this.checkMill(pos)) {
-            const opponent = this.getOpponentPieces();
-            if (opponent.length > 0) {
-                const removedPos = prompt(`Mill formed! Remove opponent's piece (positions: ${opponent.join(', ')})`);
-                if (removedPos !== null && opponent.includes(parseInt(removedPos))) {
-                    this.board[parseInt(removedPos)] = null;
+            if (this.handleMillRemoval()) {
+                // Check if opponent now has fewer than 3 pieces
+                const opponentColor = this.currentPlayer === 'white' ? 'black' : 'white';
+                const opponentPiecesAfterRemoval = this.board.filter(p => p === opponentColor).length;
+                if (opponentPiecesAfterRemoval < 3) {
+                    this.endGame(`${this.currentPlayer.toUpperCase()} Wins! (Opponent has fewer than 3 pieces)`);
+                    this.render();
+                    return;
                 }
             }
         }
@@ -271,9 +321,9 @@ class MuhleGame {
         const opponent = this.currentPlayer === 'white' ? 'black' : 'white';
         const opponentPieces = this.board.filter(p => p === opponent).length;
 
-        // Check if opponent has fewer than 3 pieces
+        // Check if opponent has fewer than 3 pieces - opponent loses immediately
         if (opponentPieces < 3) {
-            this.endGame(`${this.currentPlayer === 'white' ? 'Black' : 'White'} Wins! (Opponent has fewer than 3 pieces)`);
+            this.endGame(`${this.currentPlayer.toUpperCase()} Wins! (Opponent has fewer than 3 pieces)`);
             return;
         }
 
@@ -297,8 +347,9 @@ class MuhleGame {
             }
         }
 
+        // If opponent can't move - opponent loses
         if (!canMove) {
-            this.endGame(`${this.currentPlayer === 'white' ? 'Black' : 'White'} Wins! (Opponent is blocked)`);
+            this.endGame(`${this.currentPlayer.toUpperCase()} Wins! (Opponent is blocked)`);
         }
     }
 
